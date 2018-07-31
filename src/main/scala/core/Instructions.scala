@@ -1,4 +1,4 @@
-package systemoncat.core
+package riscv4ucore.core
 
 import Chisel._
 import scala.collection.mutable.ArrayBuffer
