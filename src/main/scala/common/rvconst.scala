@@ -151,7 +151,7 @@ object rvpriv extends rvpriv
 object rvrst extends rvrst
 object rvcause extends rvcause
 
-package rvdp {
+package rvdp {              //data path
     
     object op2_sel {
         val X = UInt(7,3) //Default
@@ -181,7 +181,7 @@ package rvdp {
         val Y = UInt(1,1) //Yes
     }
 
-    object wb_sel {
+    object wb_sel {         //write back???
         val X = UInt(0,2)
         val ALU = UInt(0,2)
         val MEM = UInt(1,2)
@@ -191,14 +191,14 @@ package rvdp {
 
     object mem_type {
         val X = UInt(2,3)
-        val B = UInt(0,3)
-        val H = UInt(1,3)
-        val W = UInt(2,3)
-        val BU = UInt(4,3)
-        val HU = UInt(5,3)
+        val B = UInt(0,3)   //byte
+        val H = UInt(1,3)   //half word
+        val W = UInt(2,3)   //word
+        val BU = UInt(4,3)  //???
+        val HU = UInt(5,3)  //???
     }
 
-    object pc_sel {
+    object pc_sel {         //pc reg select
         val X = UInt(0,2)
         val A4 = UInt(0,2) //Add 4
         val BR = UInt(1,2) //Branch
@@ -206,7 +206,7 @@ package rvdp {
         val EX = UInt(3,2) //Exception
     }
 
-    object br_sel {
+    object br_sel {             //Branch select
         val X = UInt(7, 3)
         val BEQ = UInt(0, 3)
         val BNE = UInt(1, 3)

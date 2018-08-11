@@ -36,3 +36,5 @@ config.status
 /target
 /test_run_dir
 /Makefile
+.idea/
+*~

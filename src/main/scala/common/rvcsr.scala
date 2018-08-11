@@ -25,7 +25,7 @@ trait csr_op {
     val I = UInt(4, 3)
 }
 
-trait mcsr_addr {
+trait mcsr_addr {               //M-Mode csr addr
     val mvendorid = 0xF11
     val marchid = 0xF12
     val mimpid = 0xF13
@@ -67,7 +67,7 @@ trait mcsr_addr {
     val mtimecmph = 0xBA0 //after mhpmcounter31h
 }
 
-trait dcsr_addr {
+trait dcsr_addr {           //???
     val dcsr = 0x7B0
     val dpc = 0x7B1
     val dscratch0 = 0x7B2
@@ -83,29 +83,34 @@ object csr_addr extends mcsr_addr with
 //Ref: https://github.com/freechipsproject/chisel3/wiki/Cookbook#how-do-i-create-a-bundle-from-a-uint
 //From reference, lower fields (up-to-down, down is lower than up) represent lower bits group
 class mstatusfd extends Bundle { 
-    val SD = Bool()
+    val SD = Bool()                 //The SD bit is a read-only bit that summarizes whether either the FS field or XS field signals the presence of some dirty state that will require saving extended user context to memory. 
     val rsrvd1 = UInt((30-23+1).W)
-    val TSR = Bool()
-    val TW = Bool()
-    val TVM = Bool()
-    val MXR = Bool()
-    val SUM = Bool()
-    val MPRV = Bool()
-    val XS = UInt(2.W)
-    val FS = UInt(2.W)
-    val MPP = UInt(2.W)
+    val TSR = Bool()                //The TSR (Trap SRET) bit supports intercepting the supervisor exception return instruction, SRET.
+    val TW = Bool()                 //The TW (Timeout Wait) bit supports intercepting the WFI instruction
+    val TVM = Bool()                //The TVM (Trap Virtual Memory) bit supports intercepting supervisor virtual-memory management operations. 
+    val MXR = Bool()                //The MXR (Make eXecutable Readable) bit modifies the privilege with which loads access virtual memory.
+    val SUM = Bool()                //The SUM (permit Supervisor User Memory access) bit modifies the privilege with which S-mode loads, stores, and instruction fetches access virtual memory. 
+    val MPRV = Bool()               //The MPRV (Modify PRiVilege) bit modifies the privilege level at which loads and stores execute in all privilege modes.
+    val XS = UInt(2.W)              //XS[1:0] read-only field are used to reduce the cost of context save and restore 
+    val FS = UInt(2.W)              //FS[1:0] read/write field are used to reduce the cost of context save and restore by setting and tracking the current state of the floating-point unit 
+    val MPP = UInt(2.W)             //xPP holds the previous privilege mode. xPP fields can only hold privilege modes up to x
     val rsrvd2 = UInt(2.W)
-    val SPP = Bool()
-    val MPIE = Bool()
+    val SPP = Bool()                //xPP holds the previous privilege mode. xPP fields can only hold privilege modes up to x
+    val MPIE = Bool()               ////xPIE holds the value of the interrupt-enable bit active prior to the trap,             
     val rsrvd3 = UInt(1.W)
-    val SPIE = Bool()
-    val UPIE = Bool()
-    val MIE = Bool()
+    val SPIE = Bool()               //xPIE holds the value of the interrupt-enable bit active prior to the trap,
+    val UPIE = Bool()               //xPIE holds the value of the interrupt-enable bit active prior to the trap,
+    val MIE = Bool()                //Interrupt-enable bits, MIE, SIE, and UIE, are provided for each privilege mode. 
     val rsrvd4 = UInt(1.W)
-    val SIE = Bool()
-    val UIE = Bool()
+    val SIE = Bool()                //Interrupt-enable bits, MIE, SIE, and UIE, are provided for each privilege mode.
+    val UIE = Bool()                //Interrupt-enable bits, MIE, SIE, and UIE, are provided for each privilege mode.
 }
 
+//The mip register is an XLEN-bit read/write register containing information on pending interrupts,
+//The MTIP, STIP, UTIP bits correspond to timer interrupt-pending bits for machine, supervisor, and user timer interrupts, respectively.
+//Each lower privilege level has a separate software interrupt-pending bit (SSIP, USIP),
+//The MEIP field in mip is a read-only bit that indicates a machine-mode external interrupt is pending.
+//The SEIP field in mip contains a single read-write bit. SEIP may be written by M-mode soft- ware to indicate to S-mode that an external interrupt is pending
 class mipfd extends Bundle {
     val rsrvd1 = UInt((30-12+1).W)
     val MEIP = Bool()
@@ -122,6 +127,8 @@ class mipfd extends Bundle {
     val USIP = Bool()
 }
 
+//mie is the corresponding XLEN-bit read/write register containing interrupt enable bits.
+//There is a separate timer interrupt-enable bit, named MTIE, STIE, and UTIE for M-mode, S-mode and U-mode timer interrupts respectively.
 class miefd extends Bundle {
     val rsrvd1 = UInt((30-12+1).W)
     val MEIE = Bool()
@@ -141,10 +148,10 @@ class miefd extends Bundle {
 class mcounterenfd extends Bundle {
     val HPM = Vec(31-3+1, Bool())
     val IR = Bool()
-    val TM = Bool()
-    val CY = Bool()
+    val TM = Bool()    val CY = Bool()
 }
 
+//debug CSR ???
 class dcsrfd extends Bundle {
     val xdebugver = UInt(4.W)
     val rsrvd1 = UInt(12.W)
@@ -227,7 +234,7 @@ class rvcsr extends Module {
     val mxl = "h40000000".U //From Volume II spec. Table 3.1, @xlen=32
     val misa = mxl|UInt(mext, rvspec.xlen)
 
-//CSR Register address to register/value mapping    
+    //CSR Register address to register/value mapping    
     //Using map function to simplify fetch data by address
     //Ref: https://github.com/ucb-bar/riscv-sodor/blob/master/src/common/csr.scala
     val reg_map = collection.mutable.LinkedHashMap[Int,UInt](
@@ -277,7 +284,7 @@ class rvcsr extends Module {
         reg_map += (csr_addr.mhpmevent_start+i) -> reg_mhpmevents(i)
     }
 
-//Increase Counters
+    //Increase Counters for mcycle, mtime, minstretire, pmcounter
     val counteren = (new mcounterenfd).fromBits(reg_mcounteren)
 
     when(counteren.CY) { //mCYcle
