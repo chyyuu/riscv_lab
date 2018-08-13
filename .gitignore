@@ -6,3 +6,7 @@
 /*.in
 /*.out
 /*.cmd
+verilator/*
+*~
+.idea
+verilator-*.tgz
