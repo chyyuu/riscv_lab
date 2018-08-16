@@ -148,7 +148,8 @@ class miefd extends Bundle {
 class mcounterenfd extends Bundle {
     val HPM = Vec(31-3+1, Bool())
     val IR = Bool()
-    val TM = Bool()    val CY = Bool()
+    val TM = Bool()
+    val CY = Bool()
 }
 
 //debug CSR ???
